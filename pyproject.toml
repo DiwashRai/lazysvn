@@ -7,8 +7,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
+textual = "^0.45.1"
 
+
+[tool.poetry.group.dev.dependencies]
+textual-dev = "^1.2.1"
+pytest = "^7.4.3"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+lazysvn = "lazysvn.app:main"
