@@ -26,12 +26,25 @@ class StatusView(Screen):
     .diff {
         row-span: 2;
     }
+
+    .panel DataTable {
+        height: 100%;
+    }
+
+    .panel .datatable--cursor {
+        background: $surface;
+    }
+
+    .selected-panel .datatable--cursor {
+        background: #505050;
+    }
     """
-    def __init__(self, *args, **kwargs):
+
+    def __init__(self, svn_model, *args, **kwargs):
         from status_presenter import StatusPresenter
         super().__init__(*args, **kwargs)
         self.title = "Status"
-        self._presenter = StatusPresenter(self)
+        self._presenter = StatusPresenter(self, svn_model)
 
         # initalized later in on_mount
         self._changes_panel: Optional[ChangesPanel] = None
@@ -67,6 +80,10 @@ class StatusView(Screen):
 
     def key_l(self):
         self._presenter.on_key_l()
+
+
+    def key_space(self):
+        self._presenter.on_key_space()
 
 
     def next_change(self):
@@ -115,3 +132,40 @@ class StatusView(Screen):
             self.select_staged_panel()
         else:
             raise ValueError("Unknown panel")
+
+
+    def set_changes_cols(self, columns):
+        if (self._changes_panel is None):
+            return
+        self._changes_panel.set_columns(columns)
+
+
+    def set_changes_panel_data(self, table_data):
+        if (self._changes_panel is None):
+            return
+        self._changes_panel.set_table_data(table_data)
+
+
+    def set_staged_cols(self, columns):
+        if (self._staged_panel is None):
+            return
+        self._staged_panel.set_columns(columns)
+
+
+    def set_staged_panel_data(self, table_data):
+        if (self._staged_panel is None):
+            return
+        self._staged_panel.set_table_data(table_data)
+
+
+    def get_changes_row(self):
+        if (self._changes_panel is None):
+            return
+        return self._changes_panel.get_row()
+
+
+    def get_staged_row(self):
+        if (self._staged_panel is None):
+            return
+        return self._staged_panel.get_row()
+
