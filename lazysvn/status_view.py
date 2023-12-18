@@ -29,6 +29,9 @@ class CommitView(Screen):
 class StatusView(Screen):
     BINDINGS = [
         ("c", "push_screen('commit')", "commit"),
+        ("▲▼/jk", "", "navigate entries"), # hack to populate footer
+        ("◄ ►/hl", "_", "navigate panels"),
+        ("space", "key_space", "stage/unstage"),
     ]
 
     DEFAULT_CSS = """
@@ -106,7 +109,7 @@ class StatusView(Screen):
         self._presenter.on_key_l()
 
 
-    def key_space(self):
+    def action_key_space(self):
         self._presenter.on_key_space()
 
 
