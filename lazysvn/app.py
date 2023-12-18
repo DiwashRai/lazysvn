@@ -28,7 +28,7 @@ class LazySvn(App):
     BINDINGS = [
         ("1", "switch_mode('status')", "Status"),
         ("2", "switch_mode('log')", "Log"),
-        ("q,escape", "quit", "Quit"),
+        ("q", "quit", "Quit"),
     ]
     def __init__(self, svn_model: SvnModel):
         super().__init__()

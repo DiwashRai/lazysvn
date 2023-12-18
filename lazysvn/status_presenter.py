@@ -18,15 +18,25 @@ class StatusPresenter:
 
     def on_view_mount(self):
         self._status_view.select_panel(self._selected_panel)
-        self._svn_model.fetch_status()
         self._status_view.set_changes_cols(("Status", "Path"))
         self._status_view.set_staged_cols(("Status", "Path"))
+        self._svn_model.refresh()
         self.refresh_view()
 
-    
+
     def refresh_view(self):
         self._status_view.set_changes_panel_data(format_changes(self._svn_model.unstaged_changes))
         self._status_view.set_staged_panel_data(format_changes(self._svn_model.staged_changes))
+        self.update_diff_out()
+
+
+    def update_diff_out(self):
+        row = self.get_selected_row()
+        if (row is None or row[0] == "?"):
+            self._status_view.set_diff_text("")
+            return
+        filepath = row[1]
+        self._status_view.set_diff_text(self._svn_model.diff_file(filepath))
 
 
     def on_key_j(self):
@@ -34,6 +44,7 @@ class StatusPresenter:
             self._status_view.next_change()
         elif self._selected_panel == StatusPanel.STAGED:
             self._status_view.next_staged()
+        self.update_diff_out()
 
 
     def on_key_k(self):
@@ -41,16 +52,19 @@ class StatusPresenter:
             self._status_view.prev_change()
         elif self._selected_panel == StatusPanel.STAGED:
             self._status_view.prev_staged()
+        self.update_diff_out()
 
 
     def on_key_h(self):
         self.toggle_selected_panel()
         self._status_view.select_panel(self._selected_panel)
+        self.update_diff_out()
 
 
     def on_key_l(self):
         self.toggle_selected_panel()
         self._status_view.select_panel(self._selected_panel)
+        self.update_diff_out()
 
 
     def on_key_space(self):
@@ -83,6 +97,19 @@ class StatusPresenter:
             self._selected_panel = StatusPanel.STAGED
         elif self._selected_panel == StatusPanel.STAGED:
             self._selected_panel = StatusPanel.CHANGES
+
+
+    def get_selected_row(self):
+        if self._selected_panel == StatusPanel.CHANGES:
+            row_data = self._status_view.get_changes_row()
+            if (row_data is None):
+                return None
+            return row_data
+        elif self._selected_panel == StatusPanel.STAGED:
+            row_data = self._status_view.get_staged_row()
+            if (row_data is None):
+                return None
+            return row_data
 
 
 def format_changes(changes: List[Changes]):

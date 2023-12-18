@@ -1,14 +1,36 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer
+from textual.widgets import Footer, Placeholder
 from changes_panel import ChangesPanel
 from staged_panel import StagedPanel
-from diff_panel import DiffPanel
+from diff_panel import DiffPanel, DiffText
 from typing import Optional
 
 
+class CommitView(Screen):
+    BINDINGS = [
+        ("escape", "pop_screen", "cancel"),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title = "Commit"
+
+    def compose(self) -> ComposeResult:
+        yield Placeholder("Commit Screen")
+        yield Footer()
+
+
+    def action_pop_screen(self):
+        self.app.pop_screen()
+
+
 class StatusView(Screen):
+    BINDINGS = [
+        ("c", "push_screen('commit')", "commit"),
+    ]
+
     DEFAULT_CSS = """
     StatusView {
         layout: grid;
@@ -23,8 +45,9 @@ class StatusView(Screen):
         border: solid green;
     }
 
-    .diff {
+    .diff-panel {
         row-span: 2;
+        padding: 1 2;
     }
 
     .panel DataTable {
@@ -54,7 +77,7 @@ class StatusView(Screen):
 
     def compose(self) -> ComposeResult:
         yield ChangesPanel(classes="panel")
-        yield DiffPanel(classes="diff")
+        yield DiffPanel(classes="diff-panel")
         yield StagedPanel(classes="panel")
         yield Footer()
 
@@ -63,6 +86,7 @@ class StatusView(Screen):
         self._changes_panel = self.query_one(ChangesPanel)
         self._staged_panel = self.query_one(StagedPanel)
         self._diff_panel = self.query_one(DiffPanel)
+        self.app.install_screen(CommitView(), name="commit")
         self._presenter.on_view_mount()
 
 
@@ -168,4 +192,10 @@ class StatusView(Screen):
         if (self._staged_panel is None):
             return
         return self._staged_panel.get_row()
+
+
+    def set_diff_text(self, text):
+        if (self._diff_panel is None):
+            return
+        self.query_one(DiffText).output = text
 

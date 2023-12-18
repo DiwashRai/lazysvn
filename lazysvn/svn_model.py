@@ -45,6 +45,7 @@ class SvnModel:
 
         self._unstaged_changes: List[Changes] = []
         self._staged_changes: List[Changes] = []
+        self._diff_cache = {}
 
 
     @property
@@ -55,6 +56,11 @@ class SvnModel:
     @property
     def staged_changes(self):
         return self._staged_changes
+
+
+    def refresh(self):
+        self._diff_cache = {}
+        self.fetch_status()
 
 
     def fetch_status(self):
@@ -97,6 +103,15 @@ class SvnModel:
 
     def revert_file(self, file_path: str):
         self.run_command("revert", [file_path])
+
+
+    def diff_file(self, file_path: str) -> str:
+        if (file_path in self._diff_cache):
+            return self._diff_cache[file_path]
+
+        diff = self.run_command("diff", [file_path])
+        self._diff_cache[file_path] = diff
+        return diff
 
 
     def run_command(self, subcommand: str, args, **kwargs):

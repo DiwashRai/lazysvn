@@ -10,7 +10,7 @@ class StagedPanel(Widget):
 
 
     def compose(self) -> ComposeResult:
-        yield DataTable()
+        yield DataTable(show_header=False)
 
 
     def on_mount(self) -> None:
@@ -35,5 +35,7 @@ class StagedPanel(Widget):
         self._table.action_cursor_up()
 
     def get_row(self):
+        if (self._table.row_count == 0):
+            return None
         return self._table.get_row_at(self._table.cursor_row)
 
