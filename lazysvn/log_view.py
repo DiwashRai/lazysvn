@@ -17,3 +17,5 @@ class LogView(Screen):
 
     def on_mount(self) -> None:
         print(self.app.screen_stack)
+        print("on_mount LogView")
+        print(self.css_identifier)

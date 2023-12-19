@@ -34,8 +34,17 @@ class StagedPanel(Widget):
     def prev_row(self):
         self._table.action_cursor_up()
 
+
+    @property
+    def row_idx(self):
+        return self._table.cursor_row
+
+
     def get_row(self):
         if (self._table.row_count == 0):
             return None
         return self._table.get_row_at(self._table.cursor_row)
 
+
+    def move_cursor(self, row: int):
+        self._table.move_cursor(row=row)

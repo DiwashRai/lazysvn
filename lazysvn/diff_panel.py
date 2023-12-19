@@ -13,8 +13,6 @@ class DiffText(Widget):
 
 
 class DiffPanel(VerticalScroll):
-    DEFAULT_CSS = """
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
