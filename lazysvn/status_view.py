@@ -1,29 +1,11 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer, Placeholder
-from unstaged_panel import UnstagedPanel
-from staged_panel import StagedPanel
+from textual.widgets import Footer
+from svn_status_panel import SvnStatusPanel
 from diff_panel import DiffPanel, DiffText
-from typing import Optional
-
-
-class CommitView(Screen):
-    BINDINGS = [
-        ("escape", "pop_screen", "cancel"),
-    ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.title = "Commit"
-
-    def compose(self) -> ComposeResult:
-        yield Placeholder("Commit Screen")
-        yield Footer()
-
-
-    def action_pop_screen(self):
-        self.app.pop_screen()
+from commit_view import CommitView
+from typing import Optional, Tuple
 
 
 class StatusView(Screen):
@@ -40,6 +22,12 @@ class StatusView(Screen):
         grid-size: 2;
     }
 
+    StatusView Widget{
+        scrollbar-color: grey;
+        scrollbar-color-hover: grey;
+        scrollbar-size-vertical: 1;
+    }
+
     StatusView DataTable {
         height: 100%;
     }
@@ -49,7 +37,7 @@ class StatusView(Screen):
     }
 
     .panel.selected {
-        border: solid green;
+        border: solid #8ec07c;
     }
 
     .panel .datatable--cursor {
@@ -74,26 +62,28 @@ class StatusView(Screen):
         self._presenter = StatusPresenter(self, svn_model)
 
         # initalized later in on_mount
-        self._unstaged_panel: Optional[UnstagedPanel] = None
-        self._staged_panel: Optional[StagedPanel] = None
+        self._unstaged_panel: Optional[SvnStatusPanel] = None
+        self._staged_panel: Optional[SvnStatusPanel] = None
         self._diff_panel: Optional[DiffPanel] = None
 
 
     def compose(self) -> ComposeResult:
-        yield UnstagedPanel(classes="panel")
+        yield SvnStatusPanel(classes="panel", border_title="Unstaged", id="unstaged")
         yield DiffPanel(classes="diff-panel")
-        yield StagedPanel(classes="panel")
+        yield SvnStatusPanel(classes="panel", border_title="Staged", id="staged")
         yield Footer()
 
 
     def on_mount(self) -> None:
-        self._unstaged_panel = self.query_one(UnstagedPanel)
-        self._staged_panel = self.query_one(StagedPanel)
+        self._unstaged_panel = self.query_one("#unstaged", SvnStatusPanel)
+        self._staged_panel = self.query_one("#staged", SvnStatusPanel)
         self._diff_panel = self.query_one(DiffPanel)
         self.app.install_screen(CommitView(), name="commit")
         self._presenter.on_view_mount()
 
+
     ############################ Keybindings #############################
+
 
     def key_h(self):
         self._presenter.on_key_h()
@@ -120,6 +110,18 @@ class StatusView(Screen):
             return
         self.query_one(DiffText).output = text
 
+
+    ########################## unstaged panel ############################
+
+
+    def toggle_panel(self):
+        print("next panel")
+        if not self._unstaged_panel or not self._staged_panel:
+            return
+        if self._unstaged_panel.is_focused():
+            self._staged_panel.give_focus()
+        elif self._staged_panel.is_focused():
+            self._unstaged_panel.give_focus()
 
 
     ########################## unstaged panel ############################
@@ -156,23 +158,10 @@ class StatusView(Screen):
         self._unstaged_panel.set_table_data(table_data)
 
 
-    @property
-    def unstaged_row_idx(self) -> int:
+    def get_unstaged_row(self) -> Tuple[str, ...]:
         if not self._unstaged_panel:
-            return 0
-        return self._unstaged_panel.row_idx
-
-
-    def get_unstaged_row(self):
-        if not self._unstaged_panel:
-            return
-        return self._unstaged_panel.get_row()
-
-
-    def move_unstaged_cursor(self, row: int):
-        if not self._unstaged_panel:
-            return
-        self._unstaged_panel.move_cursor(row)
+            return ("", "")
+        return self._unstaged_panel.row
 
 
     ########################### staged panel #############################
@@ -209,21 +198,8 @@ class StatusView(Screen):
         self._staged_panel.set_table_data(table_data)
 
 
-    @property
-    def staged_row_idx(self) -> int:
+    def get_staged_row(self) -> Tuple[str, ...]:
         if not self._staged_panel:
-            return 0
-        return self._staged_panel.row_idx
-
-
-    def get_staged_row(self):
-        if not self._staged_panel:
-            return
-        return self._staged_panel.get_row()
-
-
-    def move_staged_cursor(self, row: int):
-        if not self._staged_panel:
-            return
-        self._staged_panel.move_cursor(row)
+            return ("", "")
+        return self._staged_panel.row
 

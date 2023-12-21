@@ -2,7 +2,7 @@
 from enum import Enum
 from svn_model import Changes
 from status_view import StatusView
-from typing import List
+from typing import List, Tuple
 
 class StatusPanel(Enum):
     UNSTAGED = 1
@@ -38,8 +38,8 @@ class StatusPresenter:
 
 
     def update_diff_out(self):
-        row = self.get_selected_row()
-        if (row is None or row[0] == "?"):
+        row: Tuple[str, ...] = self.get_selected_row()
+        if row[0] == "?" or row[1] == "":
             self._status_view.set_diff_text("")
             return
         filepath = row[1]
@@ -75,9 +75,6 @@ class StatusPresenter:
 
 
     def on_key_space(self):
-        unstaged_idx: int = self._status_view.unstaged_row_idx
-        staged_idx: int = self._status_view.staged_row_idx
-
         if self._selected_panel == StatusPanel.UNSTAGED:
             row_data = self._status_view.get_unstaged_row()
             if (row_data is None):
@@ -96,12 +93,8 @@ class StatusPresenter:
             self._svn_model.unstage_file(filepath)
             if (status == "A"):
                 self._svn_model.revert_file(filepath)
-
         self._svn_model.fetch_status()
         self.reset_view_data()
-        self._status_view.move_unstaged_cursor(unstaged_idx)
-        self._status_view.move_staged_cursor(staged_idx)
-
 
 
     def toggle_selected_panel(self):
@@ -111,17 +104,12 @@ class StatusPresenter:
             self._selected_panel = StatusPanel.UNSTAGED
 
 
-    def get_selected_row(self):
+    def get_selected_row(self) -> Tuple[str, ...]:
         if self._selected_panel == StatusPanel.UNSTAGED:
-            row_data = self._status_view.get_unstaged_row()
-            if (row_data is None):
-                return None
-            return row_data
+             return self._status_view.get_unstaged_row()
         elif self._selected_panel == StatusPanel.STAGED:
-            row_data = self._status_view.get_staged_row()
-            if (row_data is None):
-                return None
-            return row_data
+             return self._status_view.get_staged_row()
+        return ("", "")
 
 
 def format_changes(changes: List[Changes]):
