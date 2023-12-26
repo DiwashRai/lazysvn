@@ -2,6 +2,7 @@
 from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Footer
+from textual.binding import Binding
 from svn_status_panel import SvnStatusPanel
 from diff_panel import DiffPanel, DiffText
 from commit_view import CommitView
@@ -11,8 +12,11 @@ from typing import Optional, Tuple
 class StatusView(Screen):
     BINDINGS = [
         ("c", "push_screen('commit')", "commit"),
-        ("▲▼/jk", "", "navigate entries"), # hack to populate footer
-        ("◄ ►/hl", "_", "navigate panels"),
+        ("▼/j,j", "on_key_down", "next entry"),
+        ("▲/k,k", "on_key_up", "prev entry"),
+        ("◄ ►/hl,h,left", "on_key_left", "switch panel"),
+        Binding("l,right", "on_key_right", "switch panel", show=False),
+        Binding("tab,shift+tab", "on_key_left", "", show=False),
         ("space", "key_space", "stage/unstage"),
     ]
 
@@ -28,12 +32,21 @@ class StatusView(Screen):
         scrollbar-size-vertical: 1;
     }
 
+    StatusView Footer {
+        background: #1f1d2e;
+    }
+
+    StatusView Footer > .footer--key {
+        background: #383838;
+    }
+
     StatusView DataTable {
         height: 100%;
     }
 
     .panel {
         border: solid grey;
+        background: #1f1d2e;
     }
 
     .panel.selected {
@@ -41,24 +54,25 @@ class StatusView(Screen):
     }
 
     .panel .datatable--cursor {
-        background: $surface;
+        background: #1f1d2e;
     }
 
     .panel.selected .datatable--cursor {
-        background: #505050;
+        background: #403d52;
     }
 
     .diff-panel {
         row-span: 2;
         padding: 1 2;
+        background: #1f1d2e;
     }
-
     """
 
     def __init__(self, svn_model, *args, **kwargs):
         from status_presenter import StatusPresenter
         super().__init__(*args, **kwargs)
         self.title = "Status"
+        self._svn_model = svn_model
         self._presenter = StatusPresenter(self, svn_model)
 
         # initalized later in on_mount
@@ -78,27 +92,28 @@ class StatusView(Screen):
         self._unstaged_panel = self.query_one("#unstaged", SvnStatusPanel)
         self._staged_panel = self.query_one("#staged", SvnStatusPanel)
         self._diff_panel = self.query_one(DiffPanel)
-        self.app.install_screen(CommitView(), name="commit")
+        self._diff_panel.can_focus = False
+        self.app.install_screen(CommitView(self._svn_model), name="commit")
         self._presenter.on_view_mount()
 
 
     ############################ Keybindings #############################
 
 
-    def key_h(self):
-        self._presenter.on_key_h()
+    def action_on_key_left(self):
+        self._presenter.on_key_left()
 
 
-    def key_j(self):
-        self._presenter.on_key_j()
+    def action_on_key_down(self):
+        self._presenter.on_key_down()
 
 
-    def key_k(self):
-        self._presenter.on_key_k()
+    def action_on_key_up(self):
+        self._presenter.on_key_up()
 
 
-    def key_l(self):
-        self._presenter.on_key_l()
+    def action_on_key_right(self):
+        self._presenter.on_key_right()
 
 
     def action_key_space(self):
@@ -111,38 +126,39 @@ class StatusView(Screen):
         self.query_one(DiffText).output = text
 
 
-    ########################## unstaged panel ############################
+    ############################ General ###############################
 
 
-    def toggle_panel(self):
-        print("next panel")
+    def move_cursor_down(self):
         if not self._unstaged_panel or not self._staged_panel:
             return
         if self._unstaged_panel.is_focused():
-            self._staged_panel.give_focus()
+            self._unstaged_panel.next_row()
         elif self._staged_panel.is_focused():
-            self._unstaged_panel.give_focus()
+            self._staged_panel.next_row()
+
+
+    def move_cursor_up(self):
+        if not self._unstaged_panel or not self._staged_panel:
+            return
+        if self._unstaged_panel.is_focused():
+            self._unstaged_panel.prev_row()
+        elif self._staged_panel.is_focused():
+            self._staged_panel.prev_row()
+
+
+    def on_data_table_row_highlighted(self):
+        self._presenter.on_row_highlighted()
 
 
     ########################## unstaged panel ############################
-
-
-    def next_unstaged(self):
-        if (self._unstaged_panel is None):
-            return
-        self._unstaged_panel.next_row()
-
-
-    def prev_unstaged(self):
-        if not self._unstaged_panel:
-            return
-        self._unstaged_panel.prev_row()
 
 
     def select_unstaged_panel(self):
         if not self._unstaged_panel or not self._staged_panel:
             return
         self._unstaged_panel.add_class("selected")
+        self._unstaged_panel.give_focus()
         self._staged_panel.remove_class("selected")
 
 
@@ -152,10 +168,10 @@ class StatusView(Screen):
         self._unstaged_panel.set_columns(columns)
 
 
-    def set_unstaged_panel_data(self, table_data):
+    def set_unstaged_panel_data(self, table_data, sort_col=None):
         if not self._unstaged_panel:
             return
-        self._unstaged_panel.set_table_data(table_data)
+        self._unstaged_panel.set_table_data(table_data, sort_col)
 
 
     def get_unstaged_row(self) -> Tuple[str, ...]:
@@ -167,22 +183,11 @@ class StatusView(Screen):
     ########################### staged panel #############################
 
 
-    def next_staged(self):
-        if not self._staged_panel:
-            return
-        self._staged_panel.next_row()
-
-
-    def prev_staged(self):
-        if not self._staged_panel:
-            return
-        self._staged_panel.prev_row()
-
-
     def select_staged_panel(self):
         if not self._unstaged_panel or not self._staged_panel:
             return
         self._staged_panel.add_class("selected")
+        self._staged_panel.give_focus()
         self._unstaged_panel.remove_class("selected")
 
 
@@ -192,10 +197,10 @@ class StatusView(Screen):
         self._staged_panel.set_columns(columns)
 
 
-    def set_staged_panel_data(self, table_data):
+    def set_staged_panel_data(self, table_data, sort_col=None):
         if not self._staged_panel:
             return
-        self._staged_panel.set_table_data(table_data)
+        self._staged_panel.set_table_data(table_data, sort_col)
 
 
     def get_staged_row(self) -> Tuple[str, ...]:

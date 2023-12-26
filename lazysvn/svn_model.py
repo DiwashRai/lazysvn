@@ -1,4 +1,5 @@
 
+import os
 import subprocess
 import xml.etree.ElementTree as ET
 from typing import List
@@ -19,6 +20,12 @@ char_to_status = {
 
 
 status_to_char = {v: k for k, v in char_to_status.items()}
+
+
+class SVNCommandError(Exception):
+    def __init__(self, message, stderr):
+        super().__init__(message)
+        self.stderr = stderr
 
 
 class Changes:
@@ -44,6 +51,7 @@ class SvnModel:
         self._password = password
 
         self._unstaged_changes: List[Changes] = []
+        self._added_dirs: List[Changes] = []
         self._staged_changes: List[Changes] = []
         self._diff_cache = {}
 
@@ -68,13 +76,18 @@ class SvnModel:
         root = ET.fromstring(raw_result)
 
         unstaged_changes: List[Changes] = []
+        added_dirs: List[Changes] = []
         target = root.find("target")
         if (target is not None):
             for entry in target.findall("entry"):
                 path = entry.get("path", "")
                 wc_status = entry.find("wc-status")
                 status = wc_status.get("item", "") if wc_status is not None else ""
+                if status == "added" and os.path.isdir(path):
+                    added_dirs.append(Changes(path, status_to_char[status]))
+                    continue
                 unstaged_changes.append(Changes(path, status_to_char[status]))
+        self._added_dirs = added_dirs
         self._unstaged_changes = unstaged_changes
 
         staged_changes: List[Changes] = []
@@ -90,7 +103,7 @@ class SvnModel:
 
 
     def add_file(self, file_path: str):
-        self.run_command("add", [file_path])
+        self.run_command("add", ["-N", file_path])
 
 
     def stage_file(self, file_path: str):
@@ -114,13 +127,17 @@ class SvnModel:
         return diff
 
 
+    def commit_staged(self, message: str):
+        self.run_command("commit", ["--changelist", "staged", "-m", f"\"{message}\"", self._local_path])
+
+
     def run_command(self, subcommand: str, args, **kwargs):
         cmd = ["svn", "--non-interactive"]
 
-        if (self._username):
+        if self._username:
             cmd.append(f"--username={self._username}")
 
-        if (self._password):
+        if self._password:
             cmd.append(f"--password={self._password}")
 
         cmd += [subcommand] + args
@@ -137,5 +154,8 @@ class SvnModel:
                     text=True)
             return result.stdout
         except subprocess.CalledProcessError as e:
-            print(f"Error occurred: {e.stderr}")
-            return ""
+            command = " ".join(cmd)
+            if self._password:
+                command = command.replace(self._password, "********")
+            raise SVNCommandError(f"command: {command}\n\nmsg: {e.stderr}", e.stderr)
+

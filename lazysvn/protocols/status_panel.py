@@ -8,7 +8,7 @@ class SvnStatusPanelProtocol(Protocol):
     def set_columns(self, columns) -> None:
         ...
 
-    def set_table_data(self, table_data) -> None:
+    def set_table_data(self, table_data, sort_col=None) -> None:
         ...
 
     def next_row(self) -> None:
@@ -34,10 +34,11 @@ class SvnStatusPanelImpl(SvnStatusPanelProtocol):
 
 
     def set_columns(self, columns) -> None:
-        self._table.add_columns(*columns)
+        for col in columns:
+            self._table.add_column(col, key=col)
 
 
-    def set_table_data(self, table_data) -> None:
+    def set_table_data(self, table_data, sort_col=None) -> None:
         prev_idx = self._table.cursor_row
         self._table.clear()
         for row in table_data:
@@ -54,6 +55,8 @@ class SvnStatusPanelImpl(SvnStatusPanelProtocol):
                     Text(str(cell), style="#6e6a86") for cell in row
                 ]
             self._table.add_row(*styled_row)
+        if sort_col:
+            self._table.sort(sort_col, key=lambda x: x.plain)
         self._table.move_cursor(row=prev_idx)
 
 

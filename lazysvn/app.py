@@ -17,8 +17,18 @@ def parse_args():
         "-u",
         "--username",
         dest="username",
+        default=None,
         type=str,
         help="Subversion username",
+    )
+
+    parser.add_argument(
+        "-p",
+        "--password",
+        dest="password",
+        default=None,
+        type=str,
+        help="Subversion password",
     )
     args = parser.parse_args()
     return args
@@ -43,12 +53,12 @@ class LazySvn(App):
 def main():
     os.environ["TERM"] = "xterm-256color"
     os.environ["COLORTERM"] = "truecolor"
-    # args = parse_args()
+    args = parse_args()
 
     svn_model = SvnModel(
         local_path="/home/diwash/code/svn-checkouts/textual-test",
-        username="",
-        password=""
+        username=args.username,
+        password=args.password,
     )
 
     app = LazySvn(svn_model)

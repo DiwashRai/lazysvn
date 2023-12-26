@@ -14,7 +14,7 @@ class SvnStatusPanel(Widget):
 
 
     def compose(self) -> ComposeResult:
-        yield DataTable(show_header=False)
+        yield DataTable(show_header=False, cursor_foreground_priority="renderable")
 
 
     def on_mount(self) -> None:
@@ -29,10 +29,10 @@ class SvnStatusPanel(Widget):
         self._status_panel_impl.set_columns(columns)
 
 
-    def set_table_data(self, table_data) -> None:
+    def set_table_data(self, table_data, sort_col) -> None:
         if not self._status_panel_impl:
             raise Exception("UnstagedPanel not mounted")
-        self._status_panel_impl.set_table_data(table_data)
+        self._status_panel_impl.set_table_data(table_data, sort_col)
 
 
     def next_row(self) -> None:
