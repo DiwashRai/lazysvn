@@ -3,6 +3,7 @@ from enum import Enum
 from svn_model import Changes
 from status_view import StatusView
 from typing import List, Tuple
+from textual.worker import Worker
 
 
 class StatusPanel(Enum):
@@ -15,6 +16,7 @@ class StatusPresenter:
         self._status_view: StatusView = status_view
         self._svn_model = svn_model
         self._selected_panel = StatusPanel.UNSTAGED
+        self._local_is_up_to_date = False
 
 
     def on_view_mount(self):
@@ -27,7 +29,25 @@ class StatusPresenter:
 
 
     def post_mount(self):
-        self._status_view.app.notify("checking for updates...", title="Info")
+        self._status_view.run_worker(self.check_for_updates, thread=True)
+
+
+    def check_for_updates(self) -> None:
+        res = self._svn_model.is_up_to_date()
+        if res:
+            self._local_is_up_to_date = True
+        else:
+            self._status_view.app.call_from_thread(
+                    self._status_view.notify,
+                    "Update local copy and restart lazysvn to enable commit",
+                    title="Commit disabled",
+                    severity="warning",
+                    timeout=10)
+
+
+    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
+        """Called when the worker state changes."""
+        print(event)
 
 
     def refresh_panel_selection(self):
@@ -100,6 +120,17 @@ class StatusPresenter:
             self._status_view.app.notify(str(e), title="Error", severity="error")
         self._svn_model.fetch_status()
         self.reset_view_data()
+
+
+    def on_key_c(self):
+        if self._local_is_up_to_date:
+            self._status_view.app.push_screen('commit')
+        else:
+            self._status_view.app.notify(
+                    "Update local copy and restart lazysvn to enable commit",
+                    title="Commit disabled",
+                    severity="warning",
+                    timeout=10)
 
 
     def on_row_highlighted(self):

@@ -78,7 +78,7 @@ class SvnModel:
         unstaged_changes: List[Changes] = []
         added_dirs: List[Changes] = []
         target = root.find("target")
-        if (target is not None):
+        if target is not None:
             for entry in target.findall("entry"):
                 path = entry.get("path", "")
                 wc_status = entry.find("wc-status")
@@ -115,7 +115,7 @@ class SvnModel:
 
 
     def revert_file(self, file_path: str):
-        self.run_command("revert", [file_path])
+        self.run_command("revert", ["-R", file_path])
 
 
     def diff_file(self, file_path: str) -> str:
@@ -129,6 +129,25 @@ class SvnModel:
 
     def commit_staged(self, message: str):
         self.run_command("commit", ["--changelist", "staged", "-m", f"\"{message}\"", self._local_path])
+
+
+    def is_up_to_date(self) -> bool:
+        raw_result = self.run_command("status", ["-u", "--xml", self._local_path])
+        root = ET.fromstring(raw_result)
+
+        against = root.find(".//against")
+        if against is None:
+            return True
+        head_rev = int(against.attrib['revision'])
+
+        for entry in root.findall('.//entry'):
+            wc_status = entry.find(".//wc-status")
+            if wc_status and 'revision' in wc_status.attrib:
+                wc_rev = int(wc_status.attrib['revision'])
+                if wc_rev < head_rev:
+                    return False
+
+        return True
 
 
     def run_command(self, subcommand: str, args, **kwargs):

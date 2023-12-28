@@ -1,7 +1,7 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer, TextArea, Label
+from textual.widgets import Footer, TextArea
 from textual.widgets.text_area import TextAreaTheme
 from textual.events import Key
 from rich.style import Style
@@ -57,7 +57,6 @@ class CommitView(Screen):
 
 
     def compose(self) -> ComposeResult:
-        yield Label("Commit Message")
         yield TextArea()
         yield Footer()
 
@@ -67,6 +66,7 @@ class CommitView(Screen):
         self._text_area.register_theme(default_theme)
         self._text_area.theme = "default_theme"
         self._text_area.show_line_numbers = False
+        self._text_area.border_title = "Commit Message"
         self._presenter.on_view_mount()
 
 

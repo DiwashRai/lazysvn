@@ -13,11 +13,14 @@ class CommitPresenter:
         print("commit presenter on view mount")
 
 
-    def submit_commit(self, commit_message: str):
-        try:
-            self._commit_view.app.notify(commit_message, title="Committing...")
-            self._svn_model.commit_staged(commit_message)
-        except Exception as e:
-            self._commit_view.app.notify(str(e), title="Error", severity="error")
+    def submit_commit(self, commit_message: str) -> None:
+        self._commit_view.app.notify("lorem ipsum", title="Comitting...")
+        self._commit_view.run_worker(self.sleep_then_notify(commit_message), thread=True)
+
+
+    async def sleep_then_notify(self, message: str) -> None:
+        import time
+        time.sleep(2)
+        self._commit_view.app.notify(message, title="Success")
 
 

@@ -11,7 +11,7 @@ from typing import Optional, Tuple
 
 class StatusView(Screen):
     BINDINGS = [
-        ("c", "push_screen('commit')", "commit"),
+        ("c", "on_key_c", "commit"),
         ("▼/j,j", "on_key_down", "next entry"),
         ("▲/k,k", "on_key_up", "prev entry"),
         ("◄ ►/hl,h,left", "on_key_left", "switch panel"),
@@ -118,6 +118,10 @@ class StatusView(Screen):
 
     def action_key_space(self):
         self._presenter.on_key_space()
+
+
+    def action_on_key_c(self):
+        self._presenter.on_key_c()
 
 
     def set_diff_text(self, text):
