@@ -67,7 +67,6 @@ class CommitView(Screen):
         self._text_area.theme = "default_theme"
         self._text_area.show_line_numbers = False
         self._text_area.border_title = "Commit Message"
-        self._presenter.on_view_mount()
 
 
     def action_pop_screen(self):

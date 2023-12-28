@@ -9,10 +9,6 @@ class CommitPresenter:
         self._svn_model: SvnModel = svn_model
 
 
-    def on_view_mount(self) -> None:
-        print("commit presenter on view mount")
-
-
     def submit_commit(self, commit_message: str) -> None:
         self._commit_view.app.notify("lorem ipsum", title="Comitting...")
         self._commit_view.run_worker(self.sleep_then_notify(commit_message), thread=True)
