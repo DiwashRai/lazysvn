@@ -1,7 +1,7 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer, TextArea
+from textual.widgets import Footer, TextArea, LoadingIndicator
 from textual.widgets.text_area import TextAreaTheme
 from textual.events import Key
 from rich.style import Style
@@ -25,17 +25,21 @@ class CommitView(Screen):
     CommitView {
         align: center middle;
         background: #1f1d2e 0%;
+        layers: committing;
     }
 
-    CommitView Label {
-        background: #1f1d2e;
+    CommitView Widget{
+        scrollbar-color: grey;
+        scrollbar-color-hover: grey;
+        scrollbar-size: 0 1;
     }
 
     CommitView TextArea {
-        width: 120;
+        width: 85;
         height: 10;
         padding: 0 1;
         border: round grey;
+        opacity: 1 !important;
     }
 
     CommitView Footer {
@@ -46,23 +50,39 @@ class CommitView(Screen):
         background: #383838;
     }
 
+    CommitView LoadingIndicator {
+        width: 32;
+        height: 3;
+        background: #1f1d2e;
+        border: round grey;
+        color: grey;
+        layer: committing;
+    }
+
+    CommitView LoadingIndicator.-hidden {
+        display: none;
+    }
+
     """
 
-    def __init__(self, svn_model, *args, **kwargs):
+    def __init__(self, svn_model, refresh_status_view, *args, **kwargs):
         from commit_presenter import CommitPresenter
         super().__init__(*args, **kwargs)
         self.title = "Commit"
-        self._presenter = CommitPresenter(self, svn_model)
+        self._presenter = CommitPresenter(self, svn_model, refresh_status_view)
         self._text_area: Optional[TextArea] = None
+        self._loading_indicator: Optional[LoadingIndicator] = None
 
 
     def compose(self) -> ComposeResult:
         yield TextArea()
+        yield LoadingIndicator(classes="-hidden")
         yield Footer()
 
 
     def on_mount(self) -> None:
         self._text_area = self.query_one(TextArea)
+        self._loading_indicator = self.query_one(LoadingIndicator)
         self._text_area.register_theme(default_theme)
         self._text_area.theme = "default_theme"
         self._text_area.show_line_numbers = False
@@ -76,7 +96,40 @@ class CommitView(Screen):
     def action_on_submit(self):
         if not self._text_area:
             return
-        self._presenter.submit_commit(self._text_area.text)
+        self._presenter.on_commit_action()
+
+
+    @property
+    def commit_message(self) -> str:
+        if not self._text_area:
+            return ""
+        return self._text_area.text
+
+
+    def clear_commit_message(self):
+        if not self._text_area:
+            return
+        self._text_area.text = ""
+
+
+    def disable_ui(self):
+        if not self._loading_indicator or not self._text_area:
+            return
+        self._loading_indicator.remove_class("-hidden")
+        self._text_area.disabled = True
+
+
+    def enable_ui(self):
+        if not self._loading_indicator or not self._text_area:
+            return
+        self._loading_indicator.add_class("-hidden")
+        self._text_area.disabled = False
+
+
+    def focus_commit_text_input(self):
+        if not self._text_area:
+            return
+        self._text_area.focus()
 
 
     def on_key(self, key: Key) -> None:

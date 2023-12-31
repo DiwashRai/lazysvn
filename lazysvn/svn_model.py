@@ -54,6 +54,7 @@ class SvnModel:
         self._added_dirs: List[Changes] = []
         self._staged_changes: List[Changes] = []
         self._diff_cache = {}
+        self._hide_unversioned = True
 
 
     @property
@@ -81,12 +82,15 @@ class SvnModel:
         if target is not None:
             for entry in target.findall("entry"):
                 path = entry.get("path", "")
+                relative_path = path[len(self._local_path):]
                 wc_status = entry.find("wc-status")
                 status = wc_status.get("item", "") if wc_status is not None else ""
                 if status == "added" and os.path.isdir(path):
-                    added_dirs.append(Changes(path, status_to_char[status]))
+                    added_dirs.append(Changes(relative_path, status_to_char[status]))
                     continue
-                unstaged_changes.append(Changes(path, status_to_char[status]))
+                if self._hide_unversioned and status == "unversioned":
+                    continue
+                unstaged_changes.append(Changes(relative_path, status_to_char[status]))
         self._added_dirs = added_dirs
         self._unstaged_changes = unstaged_changes
 
@@ -96,38 +100,57 @@ class SvnModel:
             if (name == "staged"):
                 for entry in changelist.findall("entry"):
                     path = entry.get("path", "")
+                    relative_path = path[len(self._local_path):]
                     wc_status = entry.find("wc-status")
                     status = wc_status.get("item", "") if wc_status is not None else ""
-                    staged_changes.append(Changes(path, status_to_char[status]))
+                    staged_changes.append(Changes(relative_path, status_to_char[status]))
         self._staged_changes = staged_changes
 
 
-    def add_file(self, file_path: str):
-        self.run_command("add", ["-N", file_path])
+    def add_file(self, rel_path: str):
+        self.run_command("add", ["-N", self._local_path + rel_path])
 
 
-    def stage_file(self, file_path: str):
-        self.run_command("changelist", ["staged", file_path])
+    def stage_file(self, rel_path: str):
+        self.run_command("changelist", ["staged", self._local_path + rel_path])
 
 
-    def unstage_file(self, file_path: str):
-        self.run_command("changelist", ["--remove", file_path])
+    def unstage_file(self, rel_path: str):
+        self.run_command("changelist", ["--remove", self._local_path + rel_path])
 
 
-    def revert_file(self, file_path: str):
-        self.run_command("revert", ["-R", file_path])
+    def revert_file(self, rel_path: str):
+        self.run_command("revert", ["-R", self._local_path + rel_path])
 
 
-    def diff_file(self, file_path: str) -> str:
-        if (file_path in self._diff_cache):
-            return self._diff_cache[file_path]
+    def diff_file(self, rel_path: str) -> str:
+        if (rel_path in self._diff_cache):
+            return self._diff_cache[rel_path]
 
-        diff = self.run_command("diff", [file_path])
-        self._diff_cache[file_path] = diff
+        diff = self.run_command("diff", [self._local_path + rel_path])
+        self._diff_cache[rel_path] = diff
         return diff
 
 
     def commit_staged(self, message: str):
+        if len(self._staged_changes) == 0 and len(self._added_dirs) == 0:
+            raise SVNCommandError("Nothing to commit", "")
+
+        if len(self._added_dirs) == 0:
+            self.changelist_commit(message)
+            return
+
+        commit_paths = [self._local_path + change.path
+                        for change_list in [self._added_dirs, self._staged_changes] 
+                        for change in change_list]
+
+        self.run_command(
+            "commit",
+            ["--depth=empty", "-m", message] + commit_paths
+        )
+
+
+    def changelist_commit(self,  message: str):
         self.run_command("commit", ["--changelist", "staged", "-m", f"\"{message}\"", self._local_path])
 
 
@@ -174,7 +197,7 @@ class SvnModel:
             return result.stdout
         except subprocess.CalledProcessError as e:
             command = " ".join(cmd)
-            if self._password:
+            if self._password and self._password in command:
                 command = command.replace(self._password, "********")
             raise SVNCommandError(f"command: {command}\n\nmsg: {e.stderr}", e.stderr)
 

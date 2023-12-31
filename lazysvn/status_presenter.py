@@ -22,10 +22,14 @@ class StatusPresenter:
     def on_view_mount(self):
         self._status_view.set_unstaged_cols(("Status", "Path"))
         self._status_view.set_staged_cols(("Status", "Path"))
+        self.refresh()
+        self.post_mount()
+
+
+    def refresh(self):
         self._svn_model.refresh()
         self.refresh_panel_selection()
         self.reset_view_data()
-        self.post_mount()
 
 
     def post_mount(self):
@@ -33,14 +37,11 @@ class StatusPresenter:
 
 
     def check_for_updates(self) -> None:
-        res = self._svn_model.is_up_to_date()
-        if res:
-            self._local_is_up_to_date = True
-        else:
+        if not self._svn_model.is_up_to_date():
             self._status_view.app.call_from_thread(
                     self._status_view.notify,
-                    "Update local copy and restart lazysvn to enable commit",
-                    title="Commit disabled",
+                    "Run 'svn update' to sync with the repository",
+                    title="Working copy out of date",
                     severity="warning",
                     timeout=10)
 
@@ -123,14 +124,7 @@ class StatusPresenter:
 
 
     def on_key_c(self):
-        if self._local_is_up_to_date:
-            self._status_view.app.push_screen('commit')
-        else:
-            self._status_view.app.notify(
-                    "Update local copy and restart lazysvn to enable commit",
-                    title="Commit disabled",
-                    severity="warning",
-                    timeout=10)
+        self._status_view.app.push_screen('commit')
 
 
     def on_row_highlighted(self):

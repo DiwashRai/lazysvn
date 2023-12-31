@@ -29,7 +29,7 @@ class StatusView(Screen):
     StatusView Widget{
         scrollbar-color: grey;
         scrollbar-color-hover: grey;
-        scrollbar-size-vertical: 1;
+        scrollbar-size: 1 1;
     }
 
     StatusView Footer {
@@ -93,7 +93,10 @@ class StatusView(Screen):
         self._staged_panel = self.query_one("#staged", SvnStatusPanel)
         self._diff_panel = self.query_one(DiffPanel)
         self._diff_panel.can_focus = False
-        self.app.install_screen(CommitView(self._svn_model), name="commit")
+        self.app.install_screen(
+                CommitView(self._svn_model, refresh_status_view=self.action_refresh),
+                name="commit",
+        )
         self._presenter.on_view_mount()
 
 
@@ -153,6 +156,10 @@ class StatusView(Screen):
 
     def on_data_table_row_highlighted(self):
         self._presenter.on_row_highlighted()
+
+
+    def action_refresh(self):
+        self._presenter.refresh()
 
 
     ########################## unstaged panel ############################
