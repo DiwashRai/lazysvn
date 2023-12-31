@@ -18,6 +18,7 @@ class StatusView(Screen):
         Binding("l,right", "on_key_right", "switch panel", show=False),
         Binding("tab,shift+tab", "on_key_left", "", show=False),
         ("space", "key_space", "stage/unstage"),
+        ("t", "on_key_t", "toggle unversioned"),
     ]
 
     DEFAULT_CSS = """
@@ -125,6 +126,10 @@ class StatusView(Screen):
 
     def action_on_key_c(self):
         self._presenter.on_key_c()
+
+
+    def action_on_key_t(self):
+        self._presenter.on_key_t()
 
 
     def set_diff_text(self, text):

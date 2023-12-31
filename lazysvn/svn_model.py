@@ -72,6 +72,10 @@ class SvnModel:
         self.fetch_status()
 
 
+    def toggle_hide_unversioned(self):
+        self._hide_unversioned = not self._hide_unversioned
+
+
     def fetch_status(self):
         raw_result = self.run_command("status", ["--xml", self._local_path])
         root = ET.fromstring(raw_result)

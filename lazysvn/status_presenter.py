@@ -127,6 +127,11 @@ class StatusPresenter:
         self._status_view.app.push_screen('commit')
 
 
+    def on_key_t(self):
+        self._svn_model.toggle_hide_unversioned()
+        self.refresh()
+
+
     def on_row_highlighted(self):
         self.update_diff_out()
 
