@@ -188,6 +188,8 @@ class SvnModel:
 
 
     def run_command(self, subcommand: str, args, **kwargs):
+        if subcommand != "status" and subcommand != "diff":
+            self._command_log_queue.append(f"svn {subcommand} {" ".join(args)}")
         cmd = ["svn", "--non-interactive"]
 
         if self._username:
@@ -197,8 +199,6 @@ class SvnModel:
             cmd.append(f"--password={self._password}")
 
         cmd += [subcommand] + args
-        if subcommand != "status" and subcommand != "diff":
-            self._command_log_queue.append(" ".join(cmd))
         return self.external_command(cmd, **kwargs)
 
 
