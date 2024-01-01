@@ -38,7 +38,7 @@ class CommitView(Screen):
         width: 85;
         height: 10;
         padding: 0 1;
-        border: round grey;
+        border: solid grey;
         opacity: 1 !important;
     }
 
@@ -54,7 +54,7 @@ class CommitView(Screen):
         width: 32;
         height: 3;
         background: #1f1d2e;
-        border: round grey;
+        border: solid grey;
         color: grey;
         layer: committing;
     }

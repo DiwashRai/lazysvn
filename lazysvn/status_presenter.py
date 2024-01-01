@@ -30,6 +30,7 @@ class StatusPresenter:
         self._svn_model.refresh()
         self.refresh_panel_selection()
         self.reset_view_data()
+        self.update_command_log()
 
 
     def post_mount(self):
@@ -77,6 +78,11 @@ class StatusPresenter:
         self._status_view.set_diff_text(self._svn_model.diff_file(filepath))
 
 
+    def update_command_log(self):
+        self._status_view.append_command_log(self._svn_model.command_log_queue)
+        self._svn_model.clear_command_log_queue()
+
+
     def on_key_down(self):
         self._status_view.move_cursor_down()
 
@@ -119,8 +125,7 @@ class StatusPresenter:
                     self._svn_model.revert_file(filepath)
         except Exception as e:
             self._status_view.app.notify(str(e), title="Error", severity="error")
-        self._svn_model.fetch_status()
-        self.reset_view_data()
+        self.refresh()
 
 
     def on_key_c(self):

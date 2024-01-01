@@ -53,6 +53,7 @@ class SvnModel:
         self._unstaged_changes: List[Changes] = []
         self._added_dirs: List[Changes] = []
         self._staged_changes: List[Changes] = []
+        self._command_log_queue: List[str] = []
         self._diff_cache = {}
         self._hide_unversioned = True
 
@@ -65,6 +66,15 @@ class SvnModel:
     @property
     def staged_changes(self):
         return self._staged_changes
+
+
+    @property
+    def command_log_queue(self):
+        return self._command_log_queue
+
+
+    def clear_command_log_queue(self):
+        self._command_log_queue = []
 
 
     def refresh(self):
@@ -187,6 +197,8 @@ class SvnModel:
             cmd.append(f"--password={self._password}")
 
         cmd += [subcommand] + args
+        if subcommand != "status" and subcommand != "diff":
+            self._command_log_queue.append(" ".join(cmd))
         return self.external_command(cmd, **kwargs)
 
 

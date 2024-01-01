@@ -1,12 +1,14 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer
+from textual.widgets import Footer, RichLog
 from textual.binding import Binding
+from textual.containers import Grid
 from svn_status_panel import SvnStatusPanel
 from diff_panel import DiffPanel, DiffText
 from commit_view import CommitView
 from typing import Optional, Tuple
+from rich.text import Text
 
 
 class StatusView(Screen):
@@ -24,16 +26,27 @@ class StatusView(Screen):
     DEFAULT_CSS = """
     StatusView {
         layout: grid;
-        grid-size: 2;
+        grid-size: 2 1;
+        grid-columns: 3fr 5fr;
+    }
+
+    StatusView .changes-grid {
+        layout: grid;
+        grid-size: 1 2;
+    }
+
+    StatusView .output-grid {
+        layout: grid;
+        grid-size: 1 2;
+        grid-rows: 85% 15%;
     }
 
     StatusView Widget{
         scrollbar-color: grey;
         scrollbar-color-hover: grey;
+        scrollbar-background: #1f1d2e;
+        scrollbar-corner-color: #1f1d2e;
         scrollbar-size: 1 1;
-    }
-
-    StatusView Footer {
         background: #1f1d2e;
     }
 
@@ -47,7 +60,6 @@ class StatusView(Screen):
 
     .panel {
         border: solid grey;
-        background: #1f1d2e;
     }
 
     .panel.selected {
@@ -63,9 +75,12 @@ class StatusView(Screen):
     }
 
     .diff-panel {
-        row-span: 2;
         padding: 1 2;
-        background: #1f1d2e;
+    }
+
+    .cmd-panel {
+        border: solid grey;
+        scrollbar-size: 0 1;
     }
     """
 
@@ -83,9 +98,12 @@ class StatusView(Screen):
 
 
     def compose(self) -> ComposeResult:
-        yield SvnStatusPanel(classes="panel", border_title="Unstaged", id="unstaged")
-        yield DiffPanel(classes="diff-panel")
-        yield SvnStatusPanel(classes="panel", border_title="Staged", id="staged")
+        with Grid(classes="changes-grid"):
+            yield SvnStatusPanel(classes="panel", border_title="Unstaged", id="unstaged")
+            yield SvnStatusPanel(classes="panel", border_title="Staged", id="staged")
+        with Grid(classes="output-grid"):
+            yield DiffPanel(classes="diff-panel")
+            yield RichLog(classes="cmd-panel", wrap=True)
         yield Footer()
 
 
@@ -94,6 +112,8 @@ class StatusView(Screen):
         self._staged_panel = self.query_one("#staged", SvnStatusPanel)
         self._diff_panel = self.query_one(DiffPanel)
         self._diff_panel.can_focus = False
+        self._cmd_log = self.query_one(RichLog)
+        self._cmd_log.border_title = "Command Log"
         self.app.install_screen(
                 CommitView(self._svn_model, refresh_status_view=self.action_refresh),
                 name="commit",
@@ -130,12 +150,6 @@ class StatusView(Screen):
 
     def action_on_key_t(self):
         self._presenter.on_key_t()
-
-
-    def set_diff_text(self, text):
-        if not self._diff_panel:
-            return
-        self.query_one(DiffText).output = text
 
 
     ############################ General ###############################
@@ -223,4 +237,29 @@ class StatusView(Screen):
         if not self._staged_panel:
             return ("", "")
         return self._staged_panel.row
+
+
+    ########################### diff panel ##############################
+
+
+    def set_diff_text(self, text):
+        if not self._diff_panel:
+            return
+        self.query_one(DiffText).output = text
+
+
+    ########################## command panell ############################
+
+
+    def append_command_log(self, commands: list[str]):
+        if not self._cmd_log or len(commands) == 0:
+            return
+        text = Text()
+        text.append("cmd: ", style="#f6c177")
+        text.append(commands[0])
+        for command in commands[1:]:
+            text.append("\ncmd: ", style="#f6c177")
+            text.append(command)
+        self._cmd_log.write(text)
+
 
