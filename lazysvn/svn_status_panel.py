@@ -3,7 +3,7 @@ from textual.app import ComposeResult
 from textual.widget import Widget
 from textual.widgets import DataTable
 from typing import Optional, Tuple
-from protocols.status_panel import SvnStatusPanelProtocol, SvnStatusPanelImpl
+from lazysvn.protocols.status_panel import SvnStatusPanelProtocol, SvnStatusPanelImpl
 
 
 class SvnStatusPanel(Widget):

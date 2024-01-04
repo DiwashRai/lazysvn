@@ -3,14 +3,23 @@ import os
 import argparse
 
 from textual.app import App
-from status_view import StatusView
-from log_view import LogView
-from svn_model import SvnModel
+from lazysvn.status_view import StatusView
+from lazysvn.log_view import LogView
+from lazysvn.svn_model import SvnModel
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description="A simple terminal client for Subversion"
+    )
+
+    parser.add_argument(
+        "path",
+        metavar="PATH",
+        type=str,
+        nargs="?",
+        default=os.getcwd(),
+        help="Path to local Subversion repository",
     )
 
     parser.add_argument(
@@ -56,7 +65,7 @@ def main():
     args = parse_args()
 
     svn_model = SvnModel(
-        local_path="/home/diwash/code/svn-checkouts/textual-test",
+        local_path=args.path,
         username=args.username,
         password=args.password,
     )

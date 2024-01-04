@@ -1,8 +1,7 @@
 
 from enum import Enum
-from svn_model import Changes
-from status_view import StatusView
-from typing import List, Tuple
+from lazysvn.status_view import StatusView
+from typing import Tuple
 from textual.worker import Worker
 
 
@@ -27,7 +26,7 @@ class StatusPresenter:
 
 
     def refresh(self):
-        self._svn_model.refresh()
+        self._svn_model.refresh_status()
         self.refresh_panel_selection()
         self.reset_view_data()
         self.update_command_log()
@@ -61,10 +60,10 @@ class StatusPresenter:
 
     def reset_view_data(self):
         self._status_view.set_unstaged_panel_data(
-            format_changes(self._svn_model.unstaged_changes),
+            self._svn_model.unstaged_changes,
             sort_col="Path")
         self._status_view.set_staged_panel_data(
-            format_changes(self._svn_model._added_dirs + self._svn_model.staged_changes),
+            self._svn_model._added_dirs + self._svn_model.staged_changes,
             sort_col="Path")
         self.update_diff_out()
 
@@ -154,12 +153,4 @@ class StatusPresenter:
         elif self._selected_panel == StatusPanel.STAGED:
              return self._status_view.get_staged_row()
         return ("", "")
-
-
-def format_changes(changes: List[Changes]):
-    # create list of tuples from changes
-    list_of_tuples = []
-    for change in changes:
-        list_of_tuples.append((change._status, change._path))
-    return list_of_tuples
 

@@ -66,7 +66,7 @@ class CommitView(Screen):
     """
 
     def __init__(self, svn_model, refresh_status_view, *args, **kwargs):
-        from commit_presenter import CommitPresenter
+        from lazysvn.commit_presenter import CommitPresenter
         super().__init__(*args, **kwargs)
         self.title = "Commit"
         self._presenter = CommitPresenter(self, svn_model, refresh_status_view)

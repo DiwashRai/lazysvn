@@ -4,9 +4,9 @@ from textual.screen import Screen
 from textual.widgets import Footer, RichLog
 from textual.binding import Binding
 from textual.containers import Grid
-from svn_status_panel import SvnStatusPanel
-from diff_panel import DiffPanel, DiffText
-from commit_view import CommitView
+from lazysvn.svn_status_panel import SvnStatusPanel
+from lazysvn.diff_panel import DiffPanel, DiffText
+from lazysvn.commit_view import CommitView
 from typing import Optional, Tuple
 from rich.text import Text
 
@@ -85,7 +85,7 @@ class StatusView(Screen):
     """
 
     def __init__(self, svn_model, *args, **kwargs):
-        from status_presenter import StatusPresenter
+        from lazysvn.status_presenter import StatusPresenter
         super().__init__(*args, **kwargs)
         self.title = "Status"
         self._svn_model = svn_model

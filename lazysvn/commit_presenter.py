@@ -1,6 +1,6 @@
 
-from commit_view import CommitView
-from svn_model import SvnModel, SVNCommandError
+from lazysvn.commit_view import CommitView
+from lazysvn.svn_model import SvnModel, SVNCommandError
 
 
 class CommitPresenter:
