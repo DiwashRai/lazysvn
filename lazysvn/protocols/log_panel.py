@@ -1,7 +1,8 @@
 
 from textual.widgets import DataTable
 from rich.text import Text
-from typing import Protocol
+from typing import List, Protocol
+from enum import Enum
 
 class SvnLogPanelProtocol(Protocol):
     def set_columns(self, columns) -> None:
@@ -17,6 +18,13 @@ class SvnLogPanelProtocol(Protocol):
         ...
 
 
+class Column(Enum):
+    REVISION = 0
+    AUTHOR = 1
+    DATE = 2
+    MESSAGE = 3
+
+
 class SvnLogPanelImpl(SvnLogPanelProtocol):
     def __init__(self, table: DataTable):
         self._table: DataTable = table
@@ -28,8 +36,18 @@ class SvnLogPanelImpl(SvnLogPanelProtocol):
 
 
     def set_table_data(self, table_data, sort_col=None) -> None:
+        prev_idx = self._table.cursor_row
         self._table.clear()
-        self._table.add_rows(table_data)
+        for row in table_data:
+            styled_row: List[Text] = [
+                Text(str(row[Column.REVISION.value]), style="#eb6f92"),
+                Text(str(row[Column.AUTHOR.value]), style="#9ccfd8"),
+                Text(str(row[Column.DATE.value][:10]), style="#8ec07c"),
+                Text(str(row[Column.MESSAGE.value]))
+            ]
+
+            self._table.add_row(*styled_row)
+        self._table.move_cursor(row=prev_idx)
 
 
     def next_row(self) -> None:

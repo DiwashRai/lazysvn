@@ -38,6 +38,7 @@ class SvnModel:
         self._username = username
         self._password = password
 
+        # status screen
         self._unstaged_changes: List[Change] = []
         self._added_dirs: List[Change] = []
         self._staged_changes: List[Change] = []
@@ -45,6 +46,7 @@ class SvnModel:
         self._diff_cache = {}
         self._hide_unversioned = True
 
+        # log screen
         self._log_entries: List[LogEntry] = []
 
 
