@@ -208,7 +208,7 @@ class SvnModel:
 
 
     def changelist_commit(self,  message: str):
-        self.run_command("commit", ["--changelist", "staged", "-m", f"\"{message}\"", self._local_path])
+        self.run_command("commit", ["--changelist", "staged", "-m", message, self._local_path])
 
 
     def is_up_to_date(self) -> bool:

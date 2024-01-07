@@ -11,7 +11,7 @@ class LogPresenter:
     def on_view_mount(self):
         self._log_view.set_log_panel_cols(("Revision", "Author", "Date", "Message"))
         self.refresh()
-        self._svn_model.fetch_log()
+        #self._svn_model.fetch_log()
         self._log_view.set_log_panel_data(self._svn_model._log_entries, "Revision")
 
 
