@@ -1,7 +1,8 @@
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer, TextArea, LoadingIndicator
+from textual.containers import Horizontal
+from textual.widgets import Footer, Label, TextArea, LoadingIndicator
 from textual.widgets.text_area import TextAreaTheme
 from textual.events import Key
 from rich.style import Style
@@ -32,6 +33,7 @@ class CommitView(Screen):
         scrollbar-color: grey;
         scrollbar-color-hover: grey;
         scrollbar-size: 0 1;
+        background: #1f1d2e;
     }
 
     CommitView TextArea {
@@ -50,19 +52,23 @@ class CommitView(Screen):
         background: #383838;
     }
 
-    CommitView LoadingIndicator {
-        width: 32;
-        height: 3;
-        background: #1f1d2e;
+    CommitView .committing-indicator {
+        width: auto;
+        height: auto;
         border: solid grey;
-        color: grey;
         layer: committing;
     }
 
-    CommitView LoadingIndicator.-hidden {
+    CommitView .committing-indicator.-hidden {
         display: none;
     }
 
+    CommitView LoadingIndicator {
+        width: 12;
+        height: 1;
+        background: #1f1d2e;
+        color: grey;
+    }
     """
 
     def __init__(self, svn_model, refresh_status_view, *args, **kwargs):
@@ -71,18 +77,20 @@ class CommitView(Screen):
         self.title = "Commit"
         self._presenter = CommitPresenter(self, svn_model, refresh_status_view)
         self._text_area: Optional[TextArea] = None
-        self._loading_indicator: Optional[LoadingIndicator] = None
+        self._loading_indicator: Optional[Horizontal] = None
 
 
     def compose(self) -> ComposeResult:
         yield TextArea()
-        yield LoadingIndicator(classes="-hidden")
+        with Horizontal(classes="committing-indicator -hidden"):
+            yield Label(" Committing...")
+            yield LoadingIndicator()
         yield Footer()
 
 
     def on_mount(self) -> None:
         self._text_area = self.query_one(TextArea)
-        self._loading_indicator = self.query_one(LoadingIndicator)
+        self._committing_indicator = self.query_one(".committing-indicator", Horizontal)
         self._text_area.register_theme(default_theme)
         self._text_area.theme = "default_theme"
         self._text_area.show_line_numbers = False
@@ -113,16 +121,16 @@ class CommitView(Screen):
 
 
     def disable_ui(self):
-        if not self._loading_indicator or not self._text_area:
+        if not self._committing_indicator or not self._text_area:
             return
-        self._loading_indicator.remove_class("-hidden")
+        self._committing_indicator.remove_class("-hidden")
         self._text_area.disabled = True
 
 
     def enable_ui(self):
-        if not self._loading_indicator or not self._text_area:
+        if not self._committing_indicator or not self._text_area:
             return
-        self._loading_indicator.add_class("-hidden")
+        self._committing_indicator.add_class("-hidden")
         self._text_area.disabled = False
 
 

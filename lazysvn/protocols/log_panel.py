@@ -17,6 +17,16 @@ class SvnLogPanelProtocol(Protocol):
     def prev_row(self) -> None:
         ...
 
+    @property
+    def rich_row(self) -> List[Text]:
+        ...
+
+    def is_focused(self) -> bool:
+        ...
+
+    def give_focus(self) -> None:
+        ...
+
 
 class Column(Enum):
     REVISION = 0
@@ -57,4 +67,16 @@ class SvnLogPanelImpl(SvnLogPanelProtocol):
     def prev_row(self) -> None:
         self._table.action_cursor_up()
 
+
+    @property
+    def rich_row(self) -> List[Text]:
+        return self._table.get_row_at(self._table.cursor_row)
+
+
+    def is_focused(self) -> bool:
+        return self._table.has_focus
+
+
+    def give_focus(self) -> None:
+        self._table.focus()
 

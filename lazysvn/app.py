@@ -55,6 +55,7 @@ class LazySvn(App):
         self.add_mode("status", StatusView(svn_model))
         self.add_mode("log", LogView(svn_model))
 
+
     def on_mount(self) -> None:
         self.switch_mode("status")
 

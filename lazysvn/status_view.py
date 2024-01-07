@@ -1,7 +1,8 @@
 
+from textual import on
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Footer, RichLog
+from textual.widgets import Footer, RichLog, DataTable
 from textual.binding import Binding
 from textual.containers import Grid
 from lazysvn.svn_status_panel import SvnStatusPanel
@@ -62,16 +63,17 @@ class StatusView(Screen):
         border: solid grey;
     }
 
-    .panel.selected {
+    .panel:focus-within {
         border: solid #8ec07c;
+    }
+
+    .panel:focus-within .datatable--cursor {
+        border: solid #8ec07c;
+        background: #403d52;
     }
 
     .panel .datatable--cursor {
         background: #1f1d2e;
-    }
-
-    .panel.selected .datatable--cursor {
-        background: #403d52;
     }
 
     .diff-panel {
@@ -114,6 +116,7 @@ class StatusView(Screen):
         self._diff_panel.can_focus = False
         self._cmd_log = self.query_one(RichLog)
         self._cmd_log.border_title = "Command Log"
+        self._cmd_log.can_focus = False
         self.app.install_screen(
                 CommitView(self._svn_model, refresh_status_view=self.action_refresh),
                 name="commit",
@@ -187,9 +190,7 @@ class StatusView(Screen):
     def select_unstaged_panel(self):
         if not self._unstaged_panel or not self._staged_panel:
             return
-        self._unstaged_panel.add_class("selected")
         self._unstaged_panel.give_focus()
-        self._staged_panel.remove_class("selected")
 
 
     def set_unstaged_cols(self, columns):
@@ -216,9 +217,7 @@ class StatusView(Screen):
     def select_staged_panel(self):
         if not self._unstaged_panel or not self._staged_panel:
             return
-        self._staged_panel.add_class("selected")
         self._staged_panel.give_focus()
-        self._unstaged_panel.remove_class("selected")
 
 
     def set_staged_cols(self, columns):

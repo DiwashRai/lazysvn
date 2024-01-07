@@ -3,7 +3,7 @@ import os
 import subprocess
 import xml.etree.ElementTree as ET
 from collections import namedtuple
-from typing import List
+from typing import Dict, List, Tuple
 
 
 char_to_status = {
@@ -48,6 +48,7 @@ class SvnModel:
 
         # log screen
         self._log_entries: List[LogEntry] = []
+        self._log_cache: Dict[int, Tuple[str, List[Change]]] = {}
 
 
     @property
@@ -155,13 +156,26 @@ class SvnModel:
             author = author_element.text if author_element is not None else None
             date_element = log_entry_element.find("date")
             date_text = date_element.text if date_element is not None else None
+            paths_element = log_entry_element.find("paths")
+            changelist: List[Change] = []
+            if paths_element is not None:
+                for path_element in paths_element.iter("path"):
+                    action = path_element.get("action")
+                    path = path_element.text
+                    changelist.append(Change(action, path))
+
             msg_element = log_entry_element.find("msg")
             msg = msg_element.text if msg_element is not None else None
 
             log_entry = LogEntry(revision, author, date_text, msg, [])
-            print(log_entry)
             log_entries.append(log_entry)
+            if revision is not None and date_text is not None:
+                self._log_cache[int(revision)] = (date_text, changelist)
         self._log_entries = log_entries
+
+
+    def get_log_cache_entry(self, revision: int) -> Tuple[str, List[Change]] | None:
+        return self._log_cache.get(revision, None)
 
 
     def add_file(self, rel_path: str):

@@ -1,8 +1,9 @@
 
 from textual.app import ComposeResult
+from rich.text import Text
 from textual.widget import Widget
 from textual.widgets import DataTable
-from typing import Optional
+from typing import Optional, List
 from lazysvn.protocols.log_panel import SvnLogPanelProtocol, SvnLogPanelImpl
 
 class SvnLogPanel(Widget):
@@ -40,7 +41,28 @@ class SvnLogPanel(Widget):
         self._log_panel_impl.next_row()
 
 
+
     def prev_row(self) -> None:
         if not self._log_panel_impl:
             raise Exception("UnstagedPanel not mounted")
         self._log_panel_impl.prev_row()
+
+
+    @property
+    def rich_row(self) -> List[Text]:
+        if not self._log_panel_impl:
+            raise Exception("UnstagedPanel not mounted")
+        return self._log_panel_impl.rich_row
+
+
+    def is_focused(self) -> bool:
+        if not self._log_panel_impl:
+            raise Exception("UnstagedPanel not mounted")
+        return self._log_panel_impl.is_focused()
+
+
+    def give_focus(self) -> None:
+        if not self._log_panel_impl:
+            raise Exception("UnstagedPanel not mounted")
+        self._log_panel_impl.give_focus()
+

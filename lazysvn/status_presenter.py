@@ -2,7 +2,6 @@
 from enum import Enum
 from lazysvn.status_view import StatusView
 from typing import Tuple
-from textual.worker import Worker
 
 
 class StatusPanel(Enum):
@@ -44,11 +43,6 @@ class StatusPresenter:
                     title="Working copy out of date",
                     severity="warning",
                     timeout=10)
-
-
-    def on_worker_state_changed(self, event: Worker.StateChanged) -> None:
-        """Called when the worker state changes."""
-        print(event)
 
 
     def refresh_panel_selection(self):
