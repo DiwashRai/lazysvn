@@ -25,8 +25,7 @@ class LogView(Screen):
     LogView {
         align: center middle;
         layout: grid;
-        grid-size: 2 1;
-        grid-columns: 5fr 3fr;
+        grid-size: 8 1;
     }
 
     LogView Widget{
@@ -67,6 +66,20 @@ class LogView(Screen):
 
     SvnLogPanel {
         border: solid grey;
+        column-span: 3;
+    }
+
+    SvnLogPanel:focus-within {
+        border: solid #8ec07c;
+        column-span: 5;
+    }
+
+    .details-panel {
+        column-span: 3;
+    }
+
+    .details-panel:focus-within {
+        column-span: 5;
     }
 
     InfoPanel {
@@ -91,7 +104,6 @@ class LogView(Screen):
         background: #403d52;
     }
 
-    SvnLogPanel:focus-within,
     ChangelistPanel:focus-within,
     VerticalScroll:focus-within {
         border: solid #8ec07c;
@@ -117,14 +129,17 @@ class LogView(Screen):
 
 
     def compose(self) -> ComposeResult:
+        # left col
         yield SvnLogPanel(border_title="Log")
-        with Grid():
+        # right col
+        with Grid(classes="details-panel"):
             yield InfoPanel()
             yield VerticalScroll(
                     Static(classes="msg-text"),
                     classes="msg-panel"
             )
             yield ChangelistPanel()
+        # loading layer
         with Horizontal(classes="loading -hidden"):
             yield Label(" Loading...")
             yield LoadingIndicator()
