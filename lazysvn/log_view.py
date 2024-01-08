@@ -147,26 +147,6 @@ class LogView(Screen):
     ############################ General ###############################
 
 
-    def move_cursor_down(self):
-        if self._log_panel.is_focused():
-            self._log_panel.next_row()
-            log_row = self._log_panel.rich_row
-            self._info_panel.set_info_text(log_row[1].plain, log_row[2].plain, log_row[0].plain)
-            self._msg_text.update(log_row[3].plain)
-        if self._changelist_panel.is_focused():
-            self._changelist_panel.next_row()
-
-
-    def move_cursor_up(self):
-        if self._log_panel.is_focused():
-            self._log_panel.prev_row()
-            log_row = self._log_panel.rich_row
-            self._info_panel.set_info_text(log_row[1].plain, log_row[2].plain, log_row[0].plain)
-            self._msg_text.update(log_row[3].plain)
-        if self._changelist_panel.is_focused():
-            self._changelist_panel.prev_row()
-
-
     ############################ Keybindings #############################
 
 
@@ -201,6 +181,14 @@ class LogView(Screen):
         self._log_panel.give_focus()
 
 
+    def next_log_panel_row(self):
+        self._log_panel.next_row()
+
+
+    def prev_log_panel_row(self):
+        self._log_panel.prev_row()
+
+
     def set_log_loading(self, loading: bool):
         if not self._loading_indicator:
             return
@@ -211,8 +199,8 @@ class LogView(Screen):
 
 
     @property
-    def selected_revision(self) -> int:
-        return int(self._log_panel.rich_row[0].plain)
+    def log_panel_rich_row(self):
+        return self._log_panel.rich_row
 
 
     ############################ Info Panel ##############################
@@ -237,6 +225,14 @@ class LogView(Screen):
         self._msg_panel.focus()
 
 
+    def scroll_msg_panel_down(self):
+        self._msg_panel.action_scroll_down()
+
+
+    def scroll_msg_panel_up(self):
+        self._msg_panel.action_scroll_up()
+
+
     ######################## Changelist Panel ############################
 
 
@@ -246,6 +242,14 @@ class LogView(Screen):
 
     def give_changelist_panel_focus(self):
         self._changelist_panel.give_focus()
+
+
+    def next_changelist_panel_row(self):
+        self._changelist_panel.next_row()
+
+
+    def prev_changelist_panel_row(self):
+        self._changelist_panel.prev_row()
 
 
     ######################### Custom Widgets #############################

@@ -14,6 +14,7 @@ class LogPresenter:
         self._log_view: LogView = log_view
         self._svn_model = svn_model
         self._selected_panel = LogPanel.LOGS
+        self._loading = False
 
 
     def on_view_mount(self):
@@ -27,14 +28,23 @@ class LogPresenter:
 
 
     def on_key_down(self):
-        self._log_view.move_cursor_down()
+        if self._loading:
+            return
         if self._selected_panel == LogPanel.LOGS:
-            log_cache_entry = self._svn_model.get_log_cache_entry(self._log_view.selected_revision)
-            self._log_view.set_changelist_panel_data(log_cache_entry[1])
+            self._log_view.next_log_panel_row()
+            self.update_logentry_panels()
+        elif self._selected_panel == LogPanel.CHANGELIST:
+            self._log_view.next_changelist_panel_row()
 
 
     def on_key_up(self):
-        self._log_view.move_cursor_up()
+        if self._loading:
+            return
+        if self._selected_panel == LogPanel.LOGS:
+            self._log_view.prev_log_panel_row()
+            self.update_logentry_panels()
+        elif self._selected_panel == LogPanel.CHANGELIST:
+            self._log_view.prev_changelist_panel_row()
 
 
     def on_key_left(self):
@@ -63,6 +73,18 @@ class LogPresenter:
             self.focus_log_panel()
 
 
+    def update_logentry_panels(self):
+        rich_log_row = self._log_view.log_panel_rich_row
+        self._log_view.set_info_text(
+            rich_log_row[1].plain,
+            rich_log_row[2].plain,
+            rich_log_row[0].plain
+        )
+        self._log_view.set_msg_text(rich_log_row[3].plain)
+        log_cache_entry = self._svn_model.get_log_cache_entry(int(rich_log_row[0].plain))
+        self._log_view.set_changelist_panel_data(log_cache_entry[1])
+
+
     def focus_log_panel(self):
         self._selected_panel = LogPanel.LOGS
         self._log_view.give_log_panel_focus()
@@ -79,6 +101,7 @@ class LogPresenter:
 
 
     def fetch_log_entries(self):
+        self._loading = True
         self._log_view.set_log_loading(True)
         self._svn_model.fetch_log()
         self._log_view.app.call_from_thread(
@@ -86,5 +109,6 @@ class LogPresenter:
                 self._svn_model._log_entries,
                 "Revision")
         self._log_view.set_log_loading(False)
+        self._loading = False
 
 
