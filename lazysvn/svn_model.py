@@ -130,7 +130,7 @@ class SvnModel:
         self._staged_changes = staged_changes
 
 
-    def fetch_log(self, revision_from=None, revision_to=None, limit=None):
+    def fetch_log(self, revision_from=None, revision_to=None, limit=100):
         args = []
 
         if revision_from or revision_to:
