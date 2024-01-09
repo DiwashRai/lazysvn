@@ -10,6 +10,12 @@ class CommitPresenter:
         self._refresh_status_view = refresh_status_view
 
 
+    def on_view_push(self):
+        if self._svn_model.saved_msg:
+            self._commit_view.set_commit_message(self._svn_model.saved_msg)
+            self._svn_model.set_saved_msg("")
+
+
     def on_commit_action(self) -> None:
         self._commit_view.run_worker(self.submit_commit, thread=True)
 
@@ -24,8 +30,9 @@ class CommitPresenter:
             self._refresh_status_view()
         except SVNCommandError as e:
             self._commit_view.app.notify(
-                    str(e),
-                    title="Commit failed",
-                    severity="error",
-                    timeout=10)
+                str(e),
+                title="Commit failed",
+                severity="error",
+                timeout=10
+            )
         self._commit_view.enable_ui()

@@ -47,8 +47,9 @@ class SvnModel:
         self._hide_unversioned = True
 
         # log screen
-        self._log_entries: List[LogEntry] = []
+        self._fetched_log_entries: List[LogEntry] = []
         self._log_cache: Dict[int, Tuple[str, List[Change]]] = {}
+        self._saved_msg = ""
 
 
     @property
@@ -77,6 +78,15 @@ class SvnModel:
 
     def toggle_hide_unversioned(self):
         self._hide_unversioned = not self._hide_unversioned
+
+
+    def set_saved_msg(self, msg: str):
+        self._saved_msg = msg
+
+
+    @property
+    def saved_msg(self):
+        return self._saved_msg
 
 
     def fetch_status(self):
@@ -171,7 +181,20 @@ class SvnModel:
             log_entries.append(log_entry)
             if revision is not None and date_text is not None:
                 self._log_cache[int(revision)] = (date_text, changelist)
-        self._log_entries = log_entries
+        self._fetched_log_entries = log_entries
+
+
+    def fetch_more_logs(self, quantity) -> bool:
+        revision_from = int(self._fetched_log_entries[-1].revision) - 1
+        if revision_from == 0:
+            return False
+
+        revision_to = revision_from - quantity + 1
+        if revision_to < 1:
+            revision_to = 1
+
+        self.fetch_log(revision_from, revision_to)
+        return True
 
 
     def get_log_cache_entry(self, revision: int) -> Tuple[str, List[Change]] | None:

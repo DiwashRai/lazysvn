@@ -35,6 +35,12 @@ class SvnLogPanel(Widget):
         self._log_panel_impl.set_table_data(table_data, sort_col)
 
 
+    def append_table_data(self, table_data) -> None:
+        if not self._log_panel_impl:
+            raise Exception("UnstagedPanel not mounted")
+        self._log_panel_impl.append_table_data(table_data)
+
+
     def next_row(self) -> None:
         if not self._log_panel_impl:
             raise Exception("UnstagedPanel not mounted")

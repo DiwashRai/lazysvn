@@ -95,6 +95,11 @@ class CommitView(Screen):
         self._text_area.theme = "default_theme"
         self._text_area.show_line_numbers = False
         self._text_area.border_title = "Commit Message"
+        self._presenter.on_view_push()
+
+
+    def on_screen_resume(self) -> None:
+        self._presenter.on_view_push()
 
 
     def action_pop_screen(self):
@@ -118,6 +123,12 @@ class CommitView(Screen):
         if not self._text_area:
             return
         self._text_area.text = ""
+
+
+    def set_commit_message(self, message: str):
+        if not self._text_area:
+            return
+        self._text_area.text = message
 
 
     def disable_ui(self):

@@ -19,6 +19,8 @@ class LogView(Screen):
         Binding("l,right", "on_key_right", "switch panel", show=False),
         Binding("tab", "on_key_right", "", show=False),
         Binding("shift+tab", "on_key_left", "", show=False),
+        ("n", "on_key_n", "next 100"),
+        ("M", "on_key_shift_m", "grab commit msg"),
     ]
 
     DEFAULT_CSS = """
@@ -181,6 +183,14 @@ class LogView(Screen):
         self._presenter.on_key_right()
 
 
+    def action_on_key_n(self):
+        self._presenter.on_key_n()
+
+
+    def action_on_key_shift_m(self):
+        self._presenter.on_key_shift_m()
+
+
     ############################ Logs Panel ##############################
 
 
@@ -190,6 +200,10 @@ class LogView(Screen):
 
     def set_log_panel_data(self, data, sort_col):
         self._log_panel.set_table_data(data, sort_col)
+
+
+    def append_log_panel_data(self, data):
+        self._log_panel.append_table_data(data)
 
 
     def give_log_panel_focus(self):
@@ -216,6 +230,10 @@ class LogView(Screen):
     @property
     def log_panel_rich_row(self):
         return self._log_panel.rich_row
+
+
+    def selected_commit_msg(self) -> str:
+        return self._log_panel.rich_row[3].plain
 
 
     ############################ Info Panel ##############################

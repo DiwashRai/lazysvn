@@ -55,6 +55,21 @@ class LogPresenter:
         self.select_next_panel()
 
 
+    def on_key_n(self):
+        self._log_view.run_worker(self.fetch_more_log_entries, thread=True)
+
+
+    def on_key_shift_m(self):
+        msg = self._log_view.selected_commit_msg()
+        self._svn_model.set_saved_msg(msg)
+        self._log_view.app.notify(
+            "Commit message copied to clipboard",
+            title="Copied",
+            severity="information",
+            timeout=2
+        )
+
+
     def select_prev_panel(self):
         if self._selected_panel == LogPanel.LOGS:
             self.focus_changelist_panel()
@@ -106,9 +121,17 @@ class LogPresenter:
         self._svn_model.fetch_log()
         self._log_view.app.call_from_thread(
                 self._log_view.set_log_panel_data,
-                self._svn_model._log_entries,
+                self._svn_model._fetched_log_entries,
                 "Revision")
         self._log_view.set_log_loading(False)
         self._loading = False
 
+
+    def fetch_more_log_entries(self, quantity=100):
+        self._loading = True
+        self._log_view.set_log_loading(True)
+        if self._svn_model.fetch_more_logs(quantity):
+            self._log_view.append_log_panel_data(self._svn_model._fetched_log_entries)
+        self._log_view.set_log_loading(False)
+        self._loading = False
 

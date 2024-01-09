@@ -11,6 +11,9 @@ class SvnLogPanelProtocol(Protocol):
     def set_table_data(self, table_data, sort_col=None) -> None:
         ...
 
+    def append_table_data(self, table_data, sort_col=None) -> None:
+        ...
+
     def next_row(self) -> None:
         ...
 
@@ -55,9 +58,19 @@ class SvnLogPanelImpl(SvnLogPanelProtocol):
                 Text(str(row[Column.DATE.value][:10]), style="#8ec07c"),
                 Text(str(row[Column.MESSAGE.value]))
             ]
-
             self._table.add_row(*styled_row)
         self._table.move_cursor(row=prev_idx)
+
+
+    def append_table_data(self, table_data, sort_col=None) -> None:
+        for row in table_data:
+            styled_row: List[Text] = [
+                Text(str(row[Column.REVISION.value]), style="#eb6f92"),
+                Text(str(row[Column.AUTHOR.value]), style="#9ccfd8"),
+                Text(str(row[Column.DATE.value][:10]), style="#8ec07c"),
+                Text(str(row[Column.MESSAGE.value]))
+            ]
+            self._table.add_row(*styled_row)
 
 
     def next_row(self) -> None:
